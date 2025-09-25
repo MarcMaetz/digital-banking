@@ -26,7 +26,12 @@ public class TransactionController {
     private final BankingService bankingService;
     
     @PostMapping
-    @Operation(summary = "Process a transaction", description = "Processes a banking transaction (deposit, withdrawal, transfer)")
+    @Operation(
+        summary = "Process a transaction", 
+        description = "Processes a banking transaction (deposit, withdrawal, transfer). " +
+                     "Note: For DEPOSIT and WITHDRAWAL transactions, both fromAccountNumber and toAccountNumber " +
+                     "should be set to the same account number. For TRANSFER transactions, use different account numbers."
+    )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Transaction processed successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid transaction data"),
