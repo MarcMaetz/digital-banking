@@ -4,6 +4,7 @@ import com.example.demo.dto.CreateAccountRequest;
 import com.example.demo.dto.TransactionRequest;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Transaction;
+import com.example.demo.exception.AccountNotFoundException;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class BankingService {
     
     public Account getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountNumber));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found: " + accountNumber));
     }
     
     public List<Account> getAllAccounts() {
