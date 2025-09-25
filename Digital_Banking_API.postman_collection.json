@@ -1,0 +1,351 @@
+{
+	"info": {
+		"_postman_id": "banking-api-collection",
+		"name": "Digital Banking API",
+		"description": "A comprehensive Spring Boot microservice for digital banking operations. This API demonstrates modern banking features including account management, transaction processing, and balance inquiries.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "banking-api"
+	},
+	"item": [
+		{
+			"name": "Account Management",
+			"item": [
+				{
+					"name": "Create Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountNumber\": \"ACC001\",\n  \"customerName\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"accountType\": \"CHECKING\",\n  \"initialBalance\": 1000.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts"
+							]
+						},
+						"description": "Creates a new bank account with the provided details"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account by Number",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/{{accountNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"{{accountNumber}}"
+							]
+						},
+						"description": "Retrieves account details by account number"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Accounts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts"
+							]
+						},
+						"description": "Retrieves all bank accounts"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Accounts by Customer Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/search?customerName={{customerName}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"search"
+							],
+							"query": [
+								{
+									"key": "customerName",
+									"value": "{{customerName}}"
+								}
+							]
+						},
+						"description": "Searches accounts by customer name"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Balance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/{{accountNumber}}/balance",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"{{accountNumber}}",
+								"balance"
+							]
+						},
+						"description": "Retrieves the current balance of an account"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/{{accountNumber}}/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"{{accountNumber}}",
+								"transactions"
+							]
+						},
+						"description": "Retrieves all transactions for an account"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Account Status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/{{accountNumber}}/status?status={{accountStatus}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"{{accountNumber}}",
+								"status"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "{{accountStatus}}"
+								}
+							]
+						},
+						"description": "Updates the status of an account"
+					},
+					"response": []
+				}
+			],
+			"description": "APIs for managing bank accounts"
+		},
+		{
+			"name": "Transaction Management",
+			"item": [
+				{
+					"name": "Process Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC002\",\n  \"amount\": 500.00,\n  \"type\": \"TRANSFER\",\n  \"description\": \"Transfer to savings account\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"transactions"
+							]
+						},
+						"description": "Processes a banking transaction (deposit, withdrawal, transfer)"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 1000.00,\n  \"type\": \"DEPOSIT\",\n  \"description\": \"Cash deposit\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"transactions"
+							]
+						},
+						"description": "Processes a deposit transaction"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Withdrawal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 200.00,\n  \"type\": \"WITHDRAWAL\",\n  \"description\": \"ATM withdrawal\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"transactions"
+							]
+						},
+						"description": "Processes a withdrawal transaction"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"transactions"
+							]
+						},
+						"description": "Retrieves all transactions in the system"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transactions by Account",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/account/{{accountNumber}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"transactions",
+								"account",
+								"{{accountNumber}}"
+							]
+						},
+						"description": "Retrieves all transactions for a specific account"
+					},
+					"response": []
+				}
+			],
+			"description": "APIs for processing banking transactions"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "accountNumber",
+			"value": "ACC001",
+			"type": "string"
+		},
+		{
+			"key": "customerName",
+			"value": "John Doe",
+			"type": "string"
+		},
+		{
+			"key": "accountStatus",
+			"value": "ACTIVE",
+			"type": "string"
+		}
+	]
+}
