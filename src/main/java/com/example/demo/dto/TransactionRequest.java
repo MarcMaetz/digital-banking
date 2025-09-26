@@ -1,6 +1,5 @@
 package com.example.demo.dto;
 
-import com.example.demo.entity.Account;
 import com.example.demo.entity.Transaction;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

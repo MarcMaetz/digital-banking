@@ -218,7 +218,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 1000.00,\n  \"type\": \"DEPOSIT\",\n  \"description\": \"Cash deposit - money goes INTO the account\"\n}"
+							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 1000.00,\n  \"type\": \"DEPOSIT\",\n  \"description\": \"Cash deposit\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/transactions",
@@ -230,7 +230,7 @@
 								"transactions"
 							]
 						},
-						"description": "Processes a deposit transaction. Note: For deposits, both fromAccountNumber and toAccountNumber should be the same (the account receiving the deposit)."
+						"description": "Processes a deposit transaction. Note: Current API requires both fromAccountNumber and toAccountNumber to be the same account (the account receiving the deposit)."
 					},
 					"response": []
 				},
@@ -246,7 +246,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 200.00,\n  \"type\": \"WITHDRAWAL\",\n  \"description\": \"ATM withdrawal - money comes OUT OF the account\"\n}"
+							"raw": "{\n  \"fromAccountNumber\": \"ACC001\",\n  \"toAccountNumber\": \"ACC001\",\n  \"amount\": 200.00,\n  \"type\": \"WITHDRAWAL\",\n  \"description\": \"ATM withdrawal\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/transactions",
@@ -258,7 +258,7 @@
 								"transactions"
 							]
 						},
-						"description": "Processes a withdrawal transaction. Note: For withdrawals, both fromAccountNumber and toAccountNumber should be the same (the account being withdrawn from)."
+						"description": "Processes a withdrawal transaction. Note: Current API requires both fromAccountNumber and toAccountNumber to be the same account (the account being withdrawn from)."
 					},
 					"response": []
 				},
