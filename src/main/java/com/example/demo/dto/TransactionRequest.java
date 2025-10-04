@@ -11,17 +11,17 @@ import java.math.BigDecimal;
 @Data
 public class TransactionRequest {
     
-    @NotBlank(message = "From account number is required")
+    @NotBlank
     private String fromAccountNumber;
     
-    @NotBlank(message = "To account number is required")
+    @NotBlank
     private String toAccountNumber;
     
-    @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be positive")
+    @NotNull
+    @Positive
     private BigDecimal amount;
     
-    @NotNull(message = "Transaction type is required")
+    @NotNull
     private Transaction.TransactionType type;
     
     private String description;
