@@ -47,15 +47,18 @@ public class BankingService {
         return savedAccount;
     }
     
+    @Transactional(readOnly = true)
     public Account getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found: " + accountNumber));
     }
     
+    @Transactional(readOnly = true)
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
     
+    @Transactional(readOnly = true)
     public List<Account> getAccountsByCustomerName(String customerName) {
         return accountRepository.findByCustomerNameContainingIgnoreCase(customerName);
     }
@@ -83,6 +86,7 @@ public class BankingService {
             throw new IllegalStateException("Insufficient balance in account: " + request.getFromAccountNumber());
         }
         
+        // Create transaction record
         Transaction transaction = new Transaction();
         transaction.setTransactionReference(UUID.randomUUID().toString());
         transaction.setAmount(request.getAmount());
@@ -92,53 +96,48 @@ public class BankingService {
         transaction.setDescription(request.getDescription());
         transaction.setStatus(Transaction.TransactionStatus.PENDING);
         
-        try {
-            // Process the transaction
-            switch (request.getType()) {
-                case DEPOSIT:
-                    toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
-                    break;
-                case WITHDRAWAL:
-                    fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
-                    break;
-                case TRANSFER:
-                    fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
-                    toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported transaction type: " + request.getType());
-            }
-            
-            // Save accounts
-            accountRepository.save(fromAccount);
-            accountRepository.save(toAccount);
-            
-            // Mark transaction as completed
-            transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
-            transaction.setProcessedAt(LocalDateTime.now());
-            
-            Transaction savedTransaction = transactionRepository.save(transaction);
-            log.info("Transaction processed successfully: {}", savedTransaction.getTransactionReference());
-            
-            return savedTransaction;
-            
-        } catch (Exception e) {
-            log.error("Transaction failed: {}", e.getMessage());
-            transaction.setStatus(Transaction.TransactionStatus.FAILED);
-            transactionRepository.save(transaction);
-            throw new RuntimeException("Transaction processing failed: " + e.getMessage(), e);
+        // Process the transaction - Spring will handle rollback automatically if any exception occurs
+        switch (request.getType()) {
+            case DEPOSIT:
+                toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+                break;
+            case WITHDRAWAL:
+                fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+                break;
+            case TRANSFER:
+                fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+                toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported transaction type: " + request.getType());
         }
+        
+        // Save accounts - Spring transaction will ensure atomicity
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+        
+        // Mark transaction as completed
+        transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
+        transaction.setProcessedAt(LocalDateTime.now());
+        
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        log.info("Transaction processed successfully: {}", savedTransaction.getTransactionReference());
+        
+        return savedTransaction;
     }
     
+    @Transactional(readOnly = true)
     public List<Transaction> getAccountTransactions(String accountNumber) {
         Account account = getAccountByNumber(accountNumber);
         return transactionRepository.findTransactionsByAccountId(account.getId());
     }
     
+    @Transactional(readOnly = true)
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
     }
     
+    @Transactional(readOnly = true)
     public BigDecimal getAccountBalance(String accountNumber) {
         Account account = getAccountByNumber(accountNumber);
         return account.getBalance();
