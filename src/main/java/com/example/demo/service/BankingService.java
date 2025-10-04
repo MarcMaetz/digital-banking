@@ -86,6 +86,12 @@ public class BankingService {
             throw new IllegalStateException("Insufficient balance in account: " + request.getFromAccountNumber());
         }
         
+        // Business rule: Cannot transfer to the same account
+        if (request.getType() == Transaction.TransactionType.TRANSFER && 
+            request.getFromAccountNumber().equals(request.getToAccountNumber())) {
+            throw new IllegalArgumentException("Cannot transfer to the same account");
+        }
+        
         // Create transaction record
         Transaction transaction = new Transaction();
         transaction.setTransactionReference(UUID.randomUUID().toString());

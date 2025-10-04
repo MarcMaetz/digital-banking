@@ -31,10 +31,4 @@ public class TransactionController {
         List<Transaction> transactions = bankingService.getAllTransactions();
         return ResponseEntity.ok(transactions);
     }
-    
-    @GetMapping("/account/{accountNumber}")
-    public ResponseEntity<List<Transaction>> getTransactionsByAccount(@PathVariable String accountNumber) {
-        List<Transaction> transactions = bankingService.getAccountTransactions(accountNumber);
-        return ResponseEntity.ok(transactions);
-    }
 }
