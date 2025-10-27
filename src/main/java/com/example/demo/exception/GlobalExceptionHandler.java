@@ -54,4 +54,32 @@ public class GlobalExceptionHandler {
         
         return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
+    
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientBalanceException(
+            InsufficientBalanceException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Insufficient Balance");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(ConcurrentModificationException.class)
+    public ResponseEntity<Map<String, Object>> handleConcurrentModificationException(
+            ConcurrentModificationException ex, WebRequest request) {
+        
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Concurrent Modification");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
 }

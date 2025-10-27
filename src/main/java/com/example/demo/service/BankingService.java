@@ -5,12 +5,16 @@ import com.example.demo.dto.TransactionRequest;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Transaction;
 import com.example.demo.exception.AccountNotFoundException;
+import com.example.demo.exception.InsufficientBalanceException;
+import com.example.demo.exception.ConcurrentModificationException;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,7 +24,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
 public class BankingService {
     
     private final AccountRepository accountRepository;
@@ -32,7 +36,8 @@ public class BankingService {
         if (accountRepository.existsByAccountNumber(request.getAccountNumber())) {
             throw new IllegalArgumentException("Account number already exists: " + request.getAccountNumber());
         }
-        
+
+        //@TODO do it with map struct
         Account account = new Account();
         account.setAccountNumber(request.getAccountNumber());
         account.setCustomerName(request.getCustomerName());
@@ -63,12 +68,14 @@ public class BankingService {
         return accountRepository.findByCustomerNameContainingIgnoreCase(customerName);
     }
     
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class, timeout = 30)
     public Transaction processTransaction(TransactionRequest request) {
         log.info("Processing transaction: {} from {} to {}", 
                 request.getType(), request.getFromAccountNumber(), request.getToAccountNumber());
         
-        Account fromAccount = getAccountByNumber(request.getFromAccountNumber());
-        Account toAccount = getAccountByNumber(request.getToAccountNumber());
+        try {
+            Account fromAccount = getAccountByNumber(request.getFromAccountNumber());
+            Account toAccount = getAccountByNumber(request.getToAccountNumber());
         
         // Validate account status
         if (fromAccount.getStatus() != Account.AccountStatus.ACTIVE) {
@@ -83,7 +90,7 @@ public class BankingService {
         if ((request.getType() == Transaction.TransactionType.WITHDRAWAL || 
              request.getType() == Transaction.TransactionType.TRANSFER) &&
             fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new IllegalStateException("Insufficient balance in account: " + request.getFromAccountNumber());
+            throw new InsufficientBalanceException("Insufficient balance in account: " + request.getFromAccountNumber());
         }
         
         // Business rule: Cannot transfer to the same account
@@ -130,6 +137,14 @@ public class BankingService {
         log.info("Transaction processed successfully: {}", savedTransaction.getTransactionReference());
         
         return savedTransaction;
+        
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.error("Optimistic locking failure during transaction processing: {}", e.getMessage());
+            throw new ConcurrentModificationException("Transaction failed due to concurrent modification. Please retry.", e);
+        } catch (Exception e) {
+            log.error("Error processing transaction: {}", e.getMessage(), e);
+            throw e; // Re-throw to trigger transaction rollback
+        }
     }
     
     @Transactional(readOnly = true)
@@ -149,6 +164,7 @@ public class BankingService {
         return account.getBalance();
     }
     
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public Account updateAccountStatus(String accountNumber, Account.AccountStatus status) {
         Account account = getAccountByNumber(accountNumber);
         account.setStatus(status);

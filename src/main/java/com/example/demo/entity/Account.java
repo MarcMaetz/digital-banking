@@ -22,6 +22,9 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Version
+    private Long version;
+    
     @NotBlank(message = "Account number is required")
     @Column(unique = true, nullable = false)
     private String accountNumber;
