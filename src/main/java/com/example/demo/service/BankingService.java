@@ -7,6 +7,7 @@ import com.example.demo.entity.Transaction;
 import com.example.demo.exception.AccountNotFoundException;
 import com.example.demo.exception.InsufficientBalanceException;
 import com.example.demo.exception.ConcurrentModificationException;
+import com.example.demo.mapper.AccountMapper;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class BankingService {
     
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final AccountMapper accountMapper;
     
     public Account createAccount(CreateAccountRequest request) {
         log.info("Creating new account for customer: {}", request.getCustomerName());
@@ -37,15 +39,7 @@ public class BankingService {
             throw new IllegalArgumentException("Account number already exists: " + request.getAccountNumber());
         }
 
-        //@TODO do it with map struct
-        Account account = new Account();
-        account.setAccountNumber(request.getAccountNumber());
-        account.setCustomerName(request.getCustomerName());
-        account.setEmail(request.getEmail());
-        account.setAccountType(request.getAccountType());
-        account.setBalance(request.getInitialBalance());
-        account.setStatus(Account.AccountStatus.ACTIVE);
-        
+        Account account = accountMapper.toAccount(request);
         Account savedAccount = accountRepository.save(account);
         log.info("Account created successfully with ID: {}", savedAccount.getId());
         
