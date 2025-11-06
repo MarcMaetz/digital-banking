@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.CreateAccountRequest;
 import com.example.demo.dto.TransactionRequest;
+import com.example.demo.dto.TransactionType;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Transaction;
 import com.example.demo.exception.AccountNotFoundException;
@@ -117,7 +118,7 @@ public class BankingService {
         Transaction transaction = new Transaction();
         transaction.setTransactionReference(UUID.randomUUID().toString());
         transaction.setAmount(request.getAmount());
-        transaction.setType(request.getType());
+        transaction.setType(toEntityTransactionType(request.getType()));
         transaction.setFromAccount(fromAccount);
         transaction.setToAccount(toAccount);
         transaction.setDescription(request.getDescription());
@@ -175,6 +176,16 @@ public class BankingService {
         if (account.getBalance().compareTo(amount) < 0) {
             throw new InsufficientBalanceException("Insufficient balance in account: " + account.getAccountNumber());
         }
+    }
+    
+    private Transaction.TransactionType toEntityTransactionType(TransactionType dtoType) {
+        return switch (dtoType) {
+            case DEPOSIT -> Transaction.TransactionType.DEPOSIT;
+            case WITHDRAWAL -> Transaction.TransactionType.WITHDRAWAL;
+            case TRANSFER -> Transaction.TransactionType.TRANSFER;
+            case PAYMENT -> Transaction.TransactionType.PAYMENT;
+            case REFUND -> Transaction.TransactionType.REFUND;
+        };
     }
     
     @Transactional(readOnly = true)
