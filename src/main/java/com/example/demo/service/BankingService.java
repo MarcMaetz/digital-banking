@@ -68,27 +68,40 @@ public class BankingService {
                 request.getType(), request.getFromAccountNumber(), request.getToAccountNumber());
         
         try {
-            Account fromAccount = getAccountByNumber(request.getFromAccountNumber());
-            Account toAccount = getAccountByNumber(request.getToAccountNumber());
+            Account fromAccount = null;
+            Account toAccount = null;
+            
+            // Fetch accounts based on transaction type
+            if (request.getFromAccountNumber() != null && !request.getFromAccountNumber().isBlank()) {
+                fromAccount = getAccountByNumber(request.getFromAccountNumber());
+            }
+            
+            if (request.getToAccountNumber() != null && !request.getToAccountNumber().isBlank()) {
+                toAccount = getAccountByNumber(request.getToAccountNumber());
+            }
         
         // Validate account status
-        if (fromAccount.getStatus() != Account.AccountStatus.ACTIVE) {
+        if (fromAccount != null && fromAccount.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("From account is not active: " + request.getFromAccountNumber());
         }
         
-        if (toAccount.getStatus() != Account.AccountStatus.ACTIVE) {
+        if (toAccount != null && toAccount.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("To account is not active: " + request.getToAccountNumber());
         }
         
         // Validate sufficient balance for withdrawals and transfers
-        if ((request.getType() == Transaction.TransactionType.WITHDRAWAL || 
-             request.getType() == Transaction.TransactionType.TRANSFER) &&
+        if (fromAccount != null && 
+            (request.getType() == Transaction.TransactionType.WITHDRAWAL || 
+             request.getType() == Transaction.TransactionType.TRANSFER ||
+             request.getType() == Transaction.TransactionType.PAYMENT ||
+             request.getType() == Transaction.TransactionType.REFUND) &&
             fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException("Insufficient balance in account: " + request.getFromAccountNumber());
         }
         
         // Business rule: Cannot transfer to the same account
         if (request.getType() == Transaction.TransactionType.TRANSFER && 
+            fromAccount != null && toAccount != null &&
             request.getFromAccountNumber().equals(request.getToAccountNumber())) {
             throw new IllegalArgumentException("Cannot transfer to the same account");
         }
@@ -106,22 +119,41 @@ public class BankingService {
         // Process the transaction - Spring will handle rollback automatically if any exception occurs
         switch (request.getType()) {
             case DEPOSIT:
+                if (toAccount == null) {
+                    throw new IllegalStateException("To account is required for DEPOSIT transaction");
+                }
                 toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+                accountRepository.save(toAccount);
                 break;
             case WITHDRAWAL:
+                if (fromAccount == null) {
+                    throw new IllegalStateException("From account is required for WITHDRAWAL transaction");
+                }
                 fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+                accountRepository.save(fromAccount);
                 break;
             case TRANSFER:
+                if (fromAccount == null || toAccount == null) {
+                    throw new IllegalStateException("Both accounts are required for TRANSFER transaction");
+                }
                 fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
                 toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+                accountRepository.save(fromAccount);
+                accountRepository.save(toAccount);
+                break;
+            case PAYMENT:
+            case REFUND:
+                if (fromAccount == null || toAccount == null) {
+                    throw new IllegalStateException("Both accounts are required for " + request.getType() + " transaction");
+                }
+                fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+                toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
+                accountRepository.save(fromAccount);
+                accountRepository.save(toAccount);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported transaction type: " + request.getType());
         }
-        
-        // Save accounts - Spring transaction will ensure atomicity
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
         
         // Mark transaction as completed
         transaction.setStatus(Transaction.TransactionStatus.COMPLETED);
