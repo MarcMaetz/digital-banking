@@ -71,40 +71,47 @@ public class BankingService {
             Account fromAccount = null;
             Account toAccount = null;
             
-            // Fetch accounts based on transaction type
-            if (request.getFromAccountNumber() != null && !request.getFromAccountNumber().isBlank()) {
-                fromAccount = getAccountByNumber(request.getFromAccountNumber());
+            // Fetch and validate accounts based on transaction type requirements
+            switch (request.getType()) {
+                case DEPOSIT:
+                    // DEPOSIT only requires toAccount
+                    toAccount = getAccountByNumber(request.getToAccountNumber());
+                    validateAccountStatus(toAccount, "To account");
+                    break;
+                    
+                case WITHDRAWAL:
+                    // WITHDRAWAL only requires fromAccount
+                    fromAccount = getAccountByNumber(request.getFromAccountNumber());
+                    validateAccountStatus(fromAccount, "From account");
+                    validateSufficientBalance(fromAccount, request.getAmount());
+                    break;
+                    
+                case TRANSFER:
+                    // TRANSFER requires both accounts
+                    fromAccount = getAccountByNumber(request.getFromAccountNumber());
+                    toAccount = getAccountByNumber(request.getToAccountNumber());
+                    validateAccountStatus(fromAccount, "From account");
+                    validateAccountStatus(toAccount, "To account");
+                    validateSufficientBalance(fromAccount, request.getAmount());
+                    // Business rule: Cannot transfer to the same account
+                    if (request.getFromAccountNumber().equals(request.getToAccountNumber())) {
+                        throw new IllegalArgumentException("Cannot transfer to the same account");
+                    }
+                    break;
+                    
+                case PAYMENT:
+                case REFUND:
+                    // PAYMENT and REFUND require both accounts
+                    fromAccount = getAccountByNumber(request.getFromAccountNumber());
+                    toAccount = getAccountByNumber(request.getToAccountNumber());
+                    validateAccountStatus(fromAccount, "From account");
+                    validateAccountStatus(toAccount, "To account");
+                    validateSufficientBalance(fromAccount, request.getAmount());
+                    break;
+                    
+                default:
+                    throw new IllegalArgumentException("Unsupported transaction type: " + request.getType());
             }
-            
-            if (request.getToAccountNumber() != null && !request.getToAccountNumber().isBlank()) {
-                toAccount = getAccountByNumber(request.getToAccountNumber());
-            }
-        
-        // Validate account status
-        if (fromAccount != null && fromAccount.getStatus() != Account.AccountStatus.ACTIVE) {
-            throw new IllegalStateException("From account is not active: " + request.getFromAccountNumber());
-        }
-        
-        if (toAccount != null && toAccount.getStatus() != Account.AccountStatus.ACTIVE) {
-            throw new IllegalStateException("To account is not active: " + request.getToAccountNumber());
-        }
-        
-        // Validate sufficient balance for withdrawals and transfers
-        if (fromAccount != null && 
-            (request.getType() == Transaction.TransactionType.WITHDRAWAL || 
-             request.getType() == Transaction.TransactionType.TRANSFER ||
-             request.getType() == Transaction.TransactionType.PAYMENT ||
-             request.getType() == Transaction.TransactionType.REFUND) &&
-            fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new InsufficientBalanceException("Insufficient balance in account: " + request.getFromAccountNumber());
-        }
-        
-        // Business rule: Cannot transfer to the same account
-        if (request.getType() == Transaction.TransactionType.TRANSFER && 
-            fromAccount != null && toAccount != null &&
-            request.getFromAccountNumber().equals(request.getToAccountNumber())) {
-            throw new IllegalArgumentException("Cannot transfer to the same account");
-        }
         
         // Create transaction record
         Transaction transaction = new Transaction();
@@ -119,34 +126,19 @@ public class BankingService {
         // Process the transaction - Spring will handle rollback automatically if any exception occurs
         switch (request.getType()) {
             case DEPOSIT:
-                if (toAccount == null) {
-                    throw new IllegalStateException("To account is required for DEPOSIT transaction");
-                }
+                assert toAccount != null;
                 toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
                 accountRepository.save(toAccount);
                 break;
             case WITHDRAWAL:
-                if (fromAccount == null) {
-                    throw new IllegalStateException("From account is required for WITHDRAWAL transaction");
-                }
+                assert fromAccount != null;
                 fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
                 accountRepository.save(fromAccount);
                 break;
-            case TRANSFER:
-                if (fromAccount == null || toAccount == null) {
-                    throw new IllegalStateException("Both accounts are required for TRANSFER transaction");
-                }
+            case TRANSFER, PAYMENT, REFUND:
+                assert fromAccount != null;
                 fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
-                toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
-                accountRepository.save(fromAccount);
-                accountRepository.save(toAccount);
-                break;
-            case PAYMENT:
-            case REFUND:
-                if (fromAccount == null || toAccount == null) {
-                    throw new IllegalStateException("Both accounts are required for " + request.getType() + " transaction");
-                }
-                fromAccount.setBalance(fromAccount.getBalance().subtract(request.getAmount()));
+                assert toAccount != null;
                 toAccount.setBalance(toAccount.getBalance().add(request.getAmount()));
                 accountRepository.save(fromAccount);
                 accountRepository.save(toAccount);
@@ -170,6 +162,18 @@ public class BankingService {
         } catch (Exception e) {
             log.error("Error processing transaction: {}", e.getMessage(), e);
             throw e; // Re-throw to trigger transaction rollback
+        }
+    }
+    
+    private void validateAccountStatus(Account account, String accountLabel) {
+        if (account.getStatus() != Account.AccountStatus.ACTIVE) {
+            throw new IllegalStateException(accountLabel + " is not active: " + account.getAccountNumber());
+        }
+    }
+    
+    private void validateSufficientBalance(Account account, BigDecimal amount) {
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance in account: " + account.getAccountNumber());
         }
     }
     
