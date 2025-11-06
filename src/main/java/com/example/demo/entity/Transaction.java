@@ -55,13 +55,6 @@ public class Transaction {
     
     private LocalDateTime processedAt;
     
-    @PreUpdate
-    public void preUpdate() {
-        if (status == TransactionStatus.COMPLETED && processedAt == null) {
-            this.processedAt = LocalDateTime.now();
-        }
-    }
-    
     public enum TransactionType {
         DEPOSIT, WITHDRAWAL, TRANSFER, PAYMENT, REFUND
     }
