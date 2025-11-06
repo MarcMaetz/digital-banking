@@ -6,7 +6,7 @@ import com.example.demo.entity.Account;
 import com.example.demo.entity.Transaction;
 import com.example.demo.exception.AccountNotFoundException;
 import com.example.demo.exception.InsufficientBalanceException;
-import com.example.demo.exception.ConcurrentModificationException;
+import com.example.demo.exception.ConcurrentTransactionException;
 import com.example.demo.mapper.AccountMapper;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.TransactionRepository;
@@ -166,7 +166,7 @@ public class BankingService {
         
         } catch (ObjectOptimisticLockingFailureException e) {
             log.error("Optimistic locking failure during transaction processing: {}", e.getMessage());
-            throw new ConcurrentModificationException("Transaction failed due to concurrent modification. Please retry.", e);
+            throw new ConcurrentTransactionException("Transaction failed due to concurrent modification. Please retry.", e);
         } catch (Exception e) {
             log.error("Error processing transaction: {}", e.getMessage(), e);
             throw e; // Re-throw to trigger transaction rollback

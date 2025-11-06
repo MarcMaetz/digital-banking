@@ -69,14 +69,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
     
-    @ExceptionHandler(ConcurrentModificationException.class)
-    public ResponseEntity<Map<String, Object>> handleConcurrentModificationException(
-            ConcurrentModificationException ex, WebRequest request) {
+    @ExceptionHandler(ConcurrentTransactionException.class)
+    public ResponseEntity<Map<String, Object>> handleConcurrentTransactionException(
+            ConcurrentTransactionException ex, WebRequest request) {
         
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.CONFLICT.value());
-        body.put("error", "Concurrent Modification");
+        body.put("error", "Concurrent Transaction");
         body.put("message", ex.getMessage());
         body.put("path", request.getDescription(false).replace("uri=", ""));
         
