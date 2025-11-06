@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.CreateAccountRequest;
 import com.example.demo.entity.Account;
+import com.example.demo.entity.Transaction;
 import com.example.demo.service.BankingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +54,8 @@ public class AccountController {
     }
     
     @GetMapping("/{accountNumber}/transactions")
-    public ResponseEntity<List<com.example.demo.entity.Transaction>> getAccountTransactions(@PathVariable String accountNumber) {
-        List<com.example.demo.entity.Transaction> transactions = bankingService.getAccountTransactions(accountNumber);
+    public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable String accountNumber) {
+        List<Transaction> transactions = bankingService.getAccountTransactions(accountNumber);
         return ResponseEntity.ok(transactions);
     }
     
