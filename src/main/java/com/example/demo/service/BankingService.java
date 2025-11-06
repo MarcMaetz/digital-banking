@@ -14,7 +14,6 @@ import com.example.demo.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
@@ -26,13 +25,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
 public class BankingService {
     
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final AccountMapper accountMapper;
     
+    @Transactional
     public Account createAccount(CreateAccountRequest request) {
         log.info("Creating new account for customer: {}", request.getCustomerName());
         
@@ -63,7 +62,7 @@ public class BankingService {
         return accountRepository.findByCustomerNameContainingIgnoreCase(customerName);
     }
     
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class, timeout = 30)
+    @Transactional(timeout = 30)
     public Transaction processTransaction(TransactionRequest request) {
         log.info("Processing transaction: {} from {} to {}", 
                 request.getType(), request.getFromAccountNumber(), request.getToAccountNumber());
@@ -205,7 +204,7 @@ public class BankingService {
         return account.getBalance();
     }
     
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    @Transactional
     public Account updateAccountStatus(String accountNumber, Account.AccountStatus status) {
         Account account = getAccountByNumber(accountNumber);
         account.setStatus(status);
